@@ -16,6 +16,7 @@ Example:
 - ORGANIZATIONS_DB_ID = notion database_id
 - MEETINGS_VAULT_PATH = folder path of obsidian meetings
 - NOTES_VAULT_PATH = folder path of obsidian notes
+- PROJECTS_VAULT_PATH = folder path containing project notes for "Notion name" overrides
 
 2. Add "Shell commands" obsidian plug-in
 3. Add the "obsidian_shell_command.ps1" script as a new shell command for the plug-in
@@ -23,7 +24,9 @@ Example:
 
 Use the "run_note_export.ps1" script to trouble shoot
 
-Each run also appends to `export.log` (repo root) with timestamps, missing relation notes, and Notion page URLs so you can audit what happened later.
+Each run also appends to `export.log` (repo root) with timestamps, missing relation notes, and Notion page URLs so you can audit what happened later. Pass `--debug-log` (already wired into the helper scripts) if you need full payload/response dumps in `export.debug.log`.
+
+When `PROJECTS_VAULT_PATH` is set, project wiki links are resolved by opening the matching `.md` file, reading its front-matter `Notion name`, and using that value for Notion lookups. If the file or property is missing, the exporter falls back to the literal `[[Project]]` text.
 
 ### Need to Know
 - .md files should be formatted like the `example_note.md` file include
@@ -38,6 +41,7 @@ Each run also appends to `export.log` (repo root) with timestamps, missing relat
     - currently, is there is no match, that property is not added (no new page made)
     - do we want to create pages in the related dbs if they do not exist
     - do we add a property to the obsidian relations that has the db_id for the proper notion db?
+        - update -- added a "Notion name" property to my projects in obsidian. for now this is used as a lookup to get the matching notion name
         - example
             1. read md file we will export
             2. read one of the linked projects (ex. 2025 - Client LF)

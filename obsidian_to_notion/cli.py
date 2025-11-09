@@ -77,13 +77,13 @@ def run_cli(argv: Optional[list[str]] = None) -> None:
     note = parse_note(note_path)
     database = route_for_note(note_path, env_config)
     result = export_note(
-        note,
-        env_config,
-        database,
-        client=client,
-        skip_lookups=args.skip_lookups,
-        send_to_notion=args.send,
-        debug_logger=debug_logger,
+        note
+        ,env_config
+        ,database
+        ,client=client
+        ,skip_lookups=args.skip_lookups
+        ,send_to_notion=args.send
+        ,debug_logger=debug_logger
     )
 
     print(f"[info] Processed {note.path}")

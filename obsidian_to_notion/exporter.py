@@ -2,13 +2,15 @@ from __future__ import annotations
 
 import json
 import logging
+from collections import defaultdict
 from dataclasses import dataclass
 from datetime import datetime
+from pathlib import Path
 from typing import Dict, List, Optional, Sequence, Set, Tuple
 
 from .config import DatabaseRoute, EnvConfig
 from .notion_client import NotionClient
-from .parser import ObsidianNote
+from .parser import ObsidianNote, parse_front_matter_and_remainder
 
 
 def normalize_notion_date(raw_value: str) -> str:
@@ -46,6 +48,64 @@ def resolve_relations(
         else:
             missing.append(name)
     return relations, missing
+
+
+def _project_override_path(project_name: str, vault_path: Path) -> Path:
+    project_path = Path(project_name)
+    if project_path.suffix.lower() != ".md":
+        project_path = project_path.with_suffix(".md")
+    return vault_path / project_path
+
+
+def _read_project_override(project_name: str, vault_path: Optional[Path], debug_logger: Optional[logging.Logger]) -> Optional[str]:
+    if not vault_path:
+        return None
+
+    candidate = _project_override_path(project_name, vault_path)
+    if not candidate.exists():
+        if debug_logger:
+            debug_logger.info("No project file for '%s' at %s", project_name, candidate)
+        return None
+
+    try:
+        front_matter, _ = parse_front_matter_and_remainder(candidate.read_text(encoding="utf-8"))
+    except OSError as exc:  # pragma: no cover - filesystem errors
+        if debug_logger:
+            debug_logger.warning("Failed to read project metadata %s: %s", candidate, exc)
+        return None
+
+    for key in ("notion name", "notion Name"):
+        override = front_matter.get(key)
+        if override:
+            if debug_logger:
+                debug_logger.info("Project '%s' overrides to '%s' via %s", project_name, override, candidate)
+            return override
+
+    if debug_logger:
+        debug_logger.info("Project file %s missing 'notion name'; using '%s'", candidate, project_name)
+    return None
+
+
+def _build_project_lookup(project_names: Sequence[str], vault_path: Optional[Path], debug_logger: Optional[logging.Logger]) -> tuple[List[str], dict[str, List[str]]]:
+    lookup_names: List[str] = []
+    reverse_map: dict[str, List[str]] = defaultdict(list)
+    for original in project_names:
+        override = _read_project_override(original, vault_path, debug_logger)
+        effective = override or original
+        lookup_names.append(effective)
+        reverse_map[effective].append(original)
+    return lookup_names, reverse_map
+
+
+def _map_missing_projects(missing_lookup: Sequence[str], reverse_map: dict[str, List[str]]) -> List[str]:
+    expanded: List[str] = []
+    for lookup in missing_lookup:
+        originals = reverse_map.get(lookup)
+        if originals:
+            expanded.extend(originals)
+        else:
+            expanded.append(lookup)
+    return expanded
 
 
 def build_page_payload(
@@ -128,14 +188,14 @@ class ExportResult:
 
 
 def export_note(
-    note: ObsidianNote,
-    env_config: EnvConfig,
-    database: DatabaseRoute,
-    *,
-    client: Optional[NotionClient] = None,
-    skip_lookups: bool = False,
-    send_to_notion: bool = False,
-    debug_logger: Optional[logging.Logger] = None,
+    note: ObsidianNote
+    ,env_config: EnvConfig
+    ,database: DatabaseRoute
+    ,*
+    ,client: Optional[NotionClient] = None
+    ,skip_lookups: bool = False
+    ,send_to_notion: bool = False
+    ,debug_logger: Optional[logging.Logger] = None
 ) -> ExportResult:
     """Parse relations, build payload, optionally call Notion, and report on missing data."""
     
@@ -159,13 +219,18 @@ def export_note(
         projects_db = database.projects_db_id or env_config.default_projects_db_id
         participants_db = database.participants_db_id or env_config.default_participants_db_id
 
+        project_lookup_names, project_reverse_map = _build_project_lookup(
+            note.projects, env_config.projects_vault_path, debug_logger
+        )
+
         if organizations_db:
             organizations_relations, missing_organizations = resolve_relations(client, organizations_db, note.organizations)
         else:
             organizations_relations, missing_organizations = [], note.organizations
 
         if projects_db:
-            projects_relations, missing_projects = resolve_relations(client, projects_db, note.projects)
+            projects_relations, missing_project_lookup = resolve_relations(client, projects_db, project_lookup_names)
+            missing_projects = _map_missing_projects(missing_project_lookup, project_reverse_map)
         else:
             projects_relations, missing_projects = [], note.projects
 

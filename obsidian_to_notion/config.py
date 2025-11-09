@@ -21,6 +21,7 @@ class EnvConfig:
     default_participants_db_id: Optional[str] = None
     meetings_vault_path: Optional[Path] = None
     notes_vault_path: Optional[Path] = None
+    projects_vault_path: Optional[Path] = None
 
 @dataclass
 class PropertyMapping:
@@ -63,6 +64,7 @@ def load_env_file(path: Path) -> EnvConfig:
     try:
         meetings_vault = raw.get("MEETINGS_VAULT_PATH")
         notes_vault = raw.get("NOTES_VAULT_PATH")
+        projects_vault = raw.get("PROJECTS_VAULT_PATH")
         meetings_db = raw.get("MEETINGS_DB_ID")
         notes_db = raw.get("NOTES_DB_ID")
         if not meetings_db and not notes_db:
@@ -77,6 +79,7 @@ def load_env_file(path: Path) -> EnvConfig:
             ,default_participants_db_id=raw["PARTICIPANTS_DB_ID"]
             ,meetings_vault_path=Path(meetings_vault).expanduser() if meetings_vault else None
             ,notes_vault_path=Path(notes_vault).expanduser() if notes_vault else None
+            ,projects_vault_path=Path(projects_vault).expanduser() if projects_vault else None
         )
     except KeyError as missing:
         raise ConfigurationError(f"Missing env var: {missing.args[0]}") from missing
