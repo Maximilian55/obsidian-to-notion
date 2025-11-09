@@ -1,0 +1,15 @@
+# keep secrets & local config out of git
+.env
+.env.* 
+
+# python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# IDEs / OS cruft
+.vscode/
+
+# sample data
+test_note.md
