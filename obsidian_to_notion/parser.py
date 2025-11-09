@@ -28,6 +28,8 @@ class ObsidianNote:
 
 
 def parse_front_matter_and_remainder(text: str) -> Tuple[Dict[str, str], str]:
+    """Split a markdown document into YAML front matter and the remaining content."""
+
     if not text.startswith("---"):
         return {}, text
 
@@ -48,6 +50,8 @@ def parse_front_matter_and_remainder(text: str) -> Tuple[Dict[str, str], str]:
 
 
 def split_metadata_and_body(text: str) -> Tuple[str, str]:
+    """Separate the metadata section (above the second ---) from the body text."""
+
     lines = text.splitlines()
     metadata_lines: List[str] = []
     for idx, line in enumerate(lines):
@@ -61,6 +65,8 @@ def split_metadata_and_body(text: str) -> Tuple[str, str]:
 
 
 def extract_bracket_links(text: str) -> List[str]:
+    """Return ordered unique [[Wiki Links]] found in the provided text."""
+
     seen = set()
     ordered: List[str] = []
     for match in BRACKETS_RE.finditer(text):
@@ -72,6 +78,8 @@ def extract_bracket_links(text: str) -> List[str]:
 
 
 def parse_note(path: Path) -> ObsidianNote:
+    """Load and parse a markdown note into structured data consumed by the exporter."""
+    
     text = path.read_text(encoding="utf-8")
     front_matter, remainder = parse_front_matter_and_remainder(text)
     metadata_section, notion_body = split_metadata_and_body(remainder)
@@ -84,21 +92,25 @@ def parse_note(path: Path) -> ObsidianNote:
 
     collecting_participants = False
 
+    def label_matches(text: str, label: str) -> bool:
+        pattern = r"^\s*(\*\*)?\s*" + re.escape(label) + r"\s*(\*\*)?\s*:{1,2}\s*"
+        return re.match(pattern, text, flags=re.IGNORECASE) is not None
+
+
     for line in lines:
         stripped = line.strip()
-        lowered = stripped.lower()
 
-        if lowered.startswith("**client**::"):
+        if label_matches(stripped, "Client"):
             organizations = extract_bracket_links(stripped)
             collecting_participants = False
             continue
 
-        if lowered.startswith("**project**::"):
+        if label_matches(stripped, "Project"):
             projects = extract_bracket_links(stripped)
             collecting_participants = False
             continue
 
-        if lowered.startswith("**participants**::"):
+        if label_matches(stripped, "Participants"):
             participants.extend(extract_bracket_links(stripped))
             collecting_participants = True
             continue

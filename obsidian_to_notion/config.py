@@ -12,6 +12,7 @@ class ConfigurationError(RuntimeError):
 @dataclass
 class EnvConfig:
     '''Expected variables in .env file'''
+
     token: str
     default_meetings_db_id: Optional[str] = None
     default_notes_db_id: Optional[str] = None
@@ -35,6 +36,7 @@ class PropertyMapping:
 @dataclass
 class DatabaseRoute:
     '''Routing info for notion import'''
+
     target_db_id: str
     organizations_db_id: Optional[str] = None
     projects_db_id: Optional[str] = None
@@ -48,7 +50,8 @@ class DatabaseRoute:
 
 
 def load_env_file(path: Path) -> EnvConfig:
-    ''''''
+    """Parse the provided .env file and return a structured EnvConfig."""
+    
     raw: Dict[str, str] = {}
     for line in path.read_text(encoding="utf-8").splitlines():
         stripped = line.strip()

@@ -12,6 +12,8 @@ from .parser import ObsidianNote
 
 
 def normalize_notion_date(raw_value: str) -> str:
+    """Return a Notion-friendly ISO date string, attempting basic cleanup."""
+
     cleaned = raw_value.strip()
     if cleaned.endswith("Z"):
         cleaned = cleaned[:-1]
@@ -32,6 +34,8 @@ def resolve_relations(
     ,*
     ,title_property: str = "Name"
 ) -> Tuple[List[Dict[str, str]], List[str]]:
+    """Look up relation IDs in Notion by title and return matches plus any missing names."""
+
     relations: List[Dict[str, str]] = []
     missing: List[str] = []
 
@@ -55,6 +59,8 @@ def build_page_payload(
     ,*
     ,available_properties: Optional[Set[str]] = None
 ) -> Dict:
+    """Assemble the JSON body for creating a Notion page based on the parsed note."""
+
     properties: Dict[str, Dict] = {database.properties.name: {"title": [{"type": "text", "text": {"content": note.source_name}}]}}
 
     def supports(prop_name: Optional[str]) -> bool:
@@ -131,6 +137,8 @@ def export_note(
     send_to_notion: bool = False,
     debug_logger: Optional[logging.Logger] = None,
 ) -> ExportResult:
+    """Parse relations, build payload, optionally call Notion, and report on missing data."""
+    
     if client is None and (send_to_notion or not skip_lookups):
         client = NotionClient(env_config.token)
     elif client is None:

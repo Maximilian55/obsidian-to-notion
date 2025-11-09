@@ -13,8 +13,9 @@ from .parser import parse_note
 
 
 def build_arg_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(description="Export a single Obsidian note into Notion.")
+    """Construct the command-line parser for the exporter CLI."""
 
+    parser = argparse.ArgumentParser(description="Export a single Obsidian note into Notion.")
     parser.add_argument("--env", default=".env", help="Path to the .env file with Notion credentials.")
     parser.add_argument("--send", action="store_true", help="Actually create pages in Notion.")
     parser.add_argument("--skip-lookups", action="store_true", help="Skip relation lookups for dry runs.")
@@ -28,6 +29,8 @@ def build_arg_parser() -> argparse.ArgumentParser:
 
 
 def route_for_note(note_path: Path, env: EnvConfig) -> DatabaseRoute:
+    """Determine which Notion database a note should target based on its filesystem path."""
+
     resolved_path = note_path.resolve()
 
     def path_matches(base: Optional[Path]) -> bool:
@@ -58,6 +61,8 @@ def route_for_note(note_path: Path, env: EnvConfig) -> DatabaseRoute:
 
 
 def run_cli(argv: Optional[list[str]] = None) -> None:
+    """Entry point invoked by export_note_to_notion.py or tests."""
+
     parser = build_arg_parser()
     args = parser.parse_args(argv)
 
@@ -111,6 +116,8 @@ LOGGER_NAME = "obsidian_to_notion"
 
 
 def configure_logging() -> logging.Logger:
+    """Set up the primary info-level logger that writes to export.log."""
+
     logger = logging.getLogger(LOGGER_NAME)
     if not logger.handlers:
         logger.setLevel(logging.INFO)
@@ -121,6 +128,8 @@ def configure_logging() -> logging.Logger:
 
 
 def configure_debug_logger() -> logging.Logger:
+    """Create or return the debug logger that captures payloads/API responses."""
+    
     debug_logger = logging.getLogger(f"{LOGGER_NAME}.debug")
     if not debug_logger.handlers:
         debug_logger.setLevel(logging.INFO)
