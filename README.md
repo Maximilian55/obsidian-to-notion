@@ -2,10 +2,17 @@
 
 ### Components
 
+#### Python
 - `obsidian_to_notion/parser.py` - pulls metadata/body out of the markdown file.
 - `obsidian_to_notion/notion_client.py` - tiny wrapper around the Notion REST API.
 - `obsidian_to_notion/exporter.py` - builds the Notion payload (with body chunking) and sends it.
 - `obsidian_to_notion/cli.py` - command-line entry point that wires everything together.
+- `export_note_to_notion.py` - python entry point
+
+#### Powershell
+- `run_note_export.ps1` - powershell script that runs program and passes certain arguments to the py script
+- `obsidian_shell_command.ps1` - powershell script that runs from obsidian, runs the `run_note_export.ps1` script and passes the file name variable and --send argument
+
 
 ### Usage
 
