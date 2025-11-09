@@ -5,7 +5,7 @@ import json
 from pathlib import Path
 from typing import Optional
 
-from .config import DatabaseRoute, EnvConfig, load_env_file
+from .config import ConfigurationError, DatabaseRoute, EnvConfig, load_env_file
 from .exporter import export_note
 from .notion_client import NotionClient
 from .parser import parse_note
@@ -21,9 +21,30 @@ def build_arg_parser() -> argparse.ArgumentParser:
     return parser
 
 
-def route_for_note(env: EnvConfig) -> DatabaseRoute:
+def route_for_note(note_path: Path, env: EnvConfig) -> DatabaseRoute:
+    resolved_path = note_path.resolve()
+
+    def path_matches(base: Optional[Path]) -> bool:
+        if not base:
+            return False
+        try:
+            resolved_path.relative_to(base.resolve())
+            return True
+        except ValueError:
+            return False
+
+    target_db: Optional[str] = None
+    if path_matches(env.meetings_vault_path) and env.default_meetings_db_id:
+        target_db = env.default_meetings_db_id
+    elif path_matches(env.notes_vault_path) and env.default_notes_db_id:
+        target_db = env.default_notes_db_id
+    else:
+        raise ConfigurationError(
+            "No target Notion database configured. Please set MEETINGS_DB_ID or NOTES_DB_ID in .env."
+        )
+
     return DatabaseRoute(
-        meetings_db_id=env.default_meetings_db_id
+        target_db_id=target_db
         ,organizations_db_id=env.default_organizations_db_id
         ,projects_db_id=env.default_projects_db_id
         ,participants_db_id=env.default_participants_db_id
@@ -39,7 +60,7 @@ def run_cli(argv: Optional[list[str]] = None) -> None:
 
     note_path = Path(args.note_path)
     note = parse_note(note_path)
-    database = route_for_note(env_config)
+    database = route_for_note(note_path, env_config)
     result = export_note(
         note
         ,env_config

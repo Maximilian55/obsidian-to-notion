@@ -54,9 +54,7 @@ def build_page_payload(
     ,*
     ,available_properties: Optional[Set[str]] = None
 ) -> Dict:
-    properties: Dict[str, Dict] = {
-        database.properties.name: {"title": [{"type": "text", "text": {"content": note.source_name}}]},
-    }
+    properties: Dict[str, Dict] = {database.properties.name: {"title": [{"type": "text", "text": {"content": note.source_name}}]}}
 
     def supports(prop_name: Optional[str]) -> bool:
         if not prop_name:
@@ -94,18 +92,18 @@ def build_page_payload(
     for chunk in chunk_text(note.body):
         children.append(
             {
-                "object": "block",
-                "type": "paragraph",
-                "paragraph": {
-                    "rich_text": [{"type": "text", "text": {"content": chunk}}],
-                },
+                "object": "block"
+                ,"type": "paragraph"
+                ,"paragraph": {
+                    "rich_text": [{"type": "text", "text": {"content": chunk}}]
+                }
             }
         )
 
     return {
-        "parent": {"database_id": database.main_db_id},
-        "properties": properties,
-        "children": children,
+        "parent": {"database_id": database.resolved_db_id}
+        ,"properties": properties
+        ,"children": children
     }
 
 
@@ -168,7 +166,7 @@ def export_note(
 
     if not skip_lookups and client is not None:
         try:
-            available_properties = client.get_database_property_names(database.main_db_id)
+            available_properties = client.get_database_property_names(database.resolved_db_id)
         except Exception:
             available_properties = None
     else:

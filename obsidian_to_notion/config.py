@@ -11,11 +11,15 @@ class ConfigurationError(RuntimeError):
 
 @dataclass
 class EnvConfig:
+    '''Expected variables in .env file'''
     token: str
-    default_meetings_db_id: str
+    default_meetings_db_id: Optional[str] = None
+    default_notes_db_id: Optional[str] = None
     default_organizations_db_id: Optional[str] = None
     default_projects_db_id: Optional[str] = None
     default_participants_db_id: Optional[str] = None
+    meetings_vault_path: Optional[Path] = None
+    notes_vault_path: Optional[Path] = None
 
 @dataclass
 class PropertyMapping:
@@ -30,16 +34,17 @@ class PropertyMapping:
 
 @dataclass
 class DatabaseRoute:
-    meetings_db_id: str
-    
+    '''Routing info for notion import'''
+    target_db_id: str
     organizations_db_id: Optional[str] = None
     projects_db_id: Optional[str] = None
     participants_db_id: Optional[str] = None
-
     properties: PropertyMapping = field(default_factory=PropertyMapping)
 
 
+
 def load_env_file(path: Path) -> EnvConfig:
+    ''''''
     raw: Dict[str, str] = {}
     for line in path.read_text(encoding="utf-8").splitlines():
         stripped = line.strip()
@@ -49,12 +54,22 @@ def load_env_file(path: Path) -> EnvConfig:
         raw[key.strip()] = value.strip().strip('"').strip("'")
 
     try:
+        meetings_vault = raw.get("MEETINGS_VAULT_PATH")
+        notes_vault = raw.get("NOTES_VAULT_PATH")
+        meetings_db = raw.get("MEETINGS_DB_ID")
+        notes_db = raw.get("NOTES_DB_ID")
+        if not meetings_db and not notes_db:
+            raise ConfigurationError("Provide at least MEETINGS_DB_ID or NOTES_DB_ID in .env")
+
         return EnvConfig(
             token=raw["NOTION_TOKEN"]
-            ,default_meetings_db_id=raw["MEETINGS_DB_ID"]
+            ,default_meetings_db_id=meetings_db
+            ,default_notes_db_id=notes_db
             ,default_organizations_db_id=raw["ORGANIZATIONS_DB_ID"]
             ,default_projects_db_id=raw["PROJECTS_DB_ID"]
             ,default_participants_db_id=raw["PARTICIPANTS_DB_ID"]
+            ,meetings_vault_path=Path(meetings_vault).expanduser() if meetings_vault else None
+            ,notes_vault_path=Path(notes_vault).expanduser() if notes_vault else None
         )
     except KeyError as missing:
         raise ConfigurationError(f"Missing env var: {missing.args[0]}") from missing
