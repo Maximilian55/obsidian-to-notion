@@ -23,10 +23,7 @@ def build_arg_parser() -> argparse.ArgumentParser:
 
 def route_for_note(env: EnvConfig) -> DatabaseRoute:
     return DatabaseRoute(
-        main_db_id=env.default_main_db_id
-        # ,location_db_id=env.default_location_db_id
-        # ,person_db_id=env.default_person_db_id
-
+        meetings_db_id=env.default_meetings_db_id
         ,organizations_db_id=env.default_organizations_db_id
         ,projects_db_id=env.default_projects_db_id
         ,participants_db_id=env.default_participants_db_id
@@ -53,17 +50,13 @@ def run_cli(argv: Optional[list[str]] = None) -> None:
     )
 
     print(f"[info] Processed {note.path}")
-    # if result.missing_locations:
-    #     print(f"[warn] Missing locations: {', '.join(result.missing_locations)}")
-    # if result.missing_people:
-    #     print(f"[warn] Missing people: {', '.join(result.missing_people)}")
 
     if result.missing_organizations:
-        print(f"[warn]")
+        print(f"[warn] Missing organizations: {', '.join(result.missing_organizations)}")
     if result.missing_projects:
-        print(f"[warn]")
+        print(f"[warn] Missing projects: {', '.join(result.missing_projects)}")
     if result.missing_participants:
-        print(f"[warn]")
+        print(f"[warn] Missing participants {', '.join(result.missing_participants)}")
 
     if not args.send:
         print(json.dumps(result.payload, indent=2))

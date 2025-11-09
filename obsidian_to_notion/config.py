@@ -12,22 +12,17 @@ class ConfigurationError(RuntimeError):
 @dataclass
 class EnvConfig:
     token: str
-    default_main_db_id: str
-    # default_location_db_id: Optional[str] = None
-    # default_person_db_id: Optional[str] = None
-
-    # default_meeting_notes_db_id: str
+    default_meetings_db_id: str
     default_organizations_db_id: Optional[str] = None
     default_projects_db_id: Optional[str] = None
     default_participants_db_id: Optional[str] = None
 
 @dataclass
 class PropertyMapping:
+    '''Name of properties in target database'''
+
     name: str = "Name"
     date: Optional[str] = "Date"
-    # location: Optional[str] = "Location"
-    # person: Optional[str] = "Person"
-
     organizations: Optional[str] = "Organizations"
     projects: Optional[str] = "Projects"
     participants: Optional[str] = "People"
@@ -35,11 +30,8 @@ class PropertyMapping:
 
 @dataclass
 class DatabaseRoute:
-    main_db_id: str
-    # location_db_id: Optional[str] = None
-    # person_db_id: Optional[str] = None
-
-    # meeting_db_id: str
+    meetings_db_id: str
+    
     organizations_db_id: Optional[str] = None
     projects_db_id: Optional[str] = None
     participants_db_id: Optional[str] = None
@@ -59,11 +51,7 @@ def load_env_file(path: Path) -> EnvConfig:
     try:
         return EnvConfig(
             token=raw["NOTION_TOKEN"]
-            ,default_main_db_id=raw["MAIN_DB_ID"]
-            # ,default_location_db_id=raw.get("LOCATION_ID")
-            # ,default_person_db_id=raw.get("PERSON_ID")
-
-            # ,default_meeting_notes_db_id=raw["MEETING_NOTES_DB_ID"]
+            ,default_meetings_db_id=raw["MEETINGS_DB_ID"]
             ,default_organizations_db_id=raw["ORGANIZATIONS_DB_ID"]
             ,default_projects_db_id=raw["PROJECTS_DB_ID"]
             ,default_participants_db_id=raw["PARTICIPANTS_DB_ID"]

@@ -1,4 +1,4 @@
-# keep secrets & local config out of git
+# secrets
 .env
 .env.* 
 
@@ -8,7 +8,7 @@ __pycache__/
 .venv/
 venv/
 
-# IDEs / OS cruft
+# IDEs
 .vscode/
 
 # sample data

@@ -46,13 +46,11 @@ def resolve_relations(
 def build_page_payload(
     note: ObsidianNote
     ,database: DatabaseRoute
-    # ,location_relations: List[Dict[str, str]]
-    # ,person_relations: List[Dict[str, str]]
 
     ,organizations_relations: List[Dict[str, str]]
     ,projects_relations: List[Dict[str, str]]
     ,participants_relations: List[Dict[str, str]]
-
+    
     ,*
     ,available_properties: Optional[Set[str]] = None
 ) -> Dict:
@@ -67,16 +65,6 @@ def build_page_payload(
 
     if note.date_property and supports(database.properties.date):
         properties[database.properties.date] = {"date": {"start": normalize_notion_date(note.date_property)}}
-
-    # if location_relations and supports(database.properties.location):
-    #     properties[database.properties.location] = {"relation": location_relations}
-    # elif location_relations:
-    #     print("[warn] Skipping location relation; property not in database schema.")
-
-    # if person_relations and supports(database.properties.person):
-    #     properties[database.properties.person] = {"relation": person_relations}
-    # elif person_relations:
-    #     print("[warn] Skipping person relation; property not in database schema.")
 
     # Organizations
     if organizations_relations and supports(database.properties.organizations):
@@ -125,8 +113,6 @@ def build_page_payload(
 class ExportResult:
     note: ObsidianNote
     payload: Dict
-    # missing_locations: List[str]
-    # missing_people: List[str]
 
     missing_organizations: List[str]
     missing_projects: List[str]
@@ -152,37 +138,18 @@ def export_note(
         client = None
 
     if skip_lookups or client is None:
-        # location_relations: List[Dict[str, str]] = []
-        # person_relations: List[Dict[str, str]] = []
-
         organizations_relations: List[Dict[str, str]] = []
         projects_relations: List[Dict[str, str]] = []
         participants_relations: List[Dict[str, str]] = []
-
-        # missing_locations = note.locations
-        # missing_people = note.people
 
         missing_organizations = note.organizations
         missing_projects = note.projects
         missing_participants = note.participants
 
     else:
-        # location_db = database.location_db_id or env_config.default_location_db_id
-        # person_db = database.person_db_id or env_config.default_person_db_id
-
         organizations_db = database.organizations_db_id or env_config.default_organizations_db_id
         projects_db = database.projects_db_id or env_config.default_projects_db_id
         participants_db = database.participants_db_id or env_config.default_participants_db_id
-
-        # if location_db:
-        #     location_relations, missing_locations = resolve_relations(client, location_db, note.locations)
-        # else:
-        #     location_relations, missing_locations = [], note.locations
-
-        # if person_db:
-        #     person_relations, missing_people = resolve_relations(client, person_db, note.people)
-        # else:
-        #     person_relations, missing_people = [], note.people
 
         if organizations_db:
             organizations_relations, missing_organizations = resolve_relations(client, organizations_db, note.organizations)
@@ -210,8 +177,6 @@ def export_note(
     payload = build_page_payload(
         note
         ,database
-        # ,location_relations
-        # ,person_relations
         
         ,organizations_relations
         ,projects_relations
@@ -227,8 +192,6 @@ def export_note(
     return ExportResult(
         note=note
         ,payload=payload
-        # ,missing_locations=missing_locations
-        # ,missing_people=missing_people
         
         ,missing_organizations=missing_organizations
         ,missing_projects=missing_projects

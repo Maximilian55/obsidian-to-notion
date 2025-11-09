@@ -14,8 +14,6 @@ class ObsidianNote:
     front_matter: Dict[str, str]
     metadata_section: str
     body: str
-    # locations: List[str]
-    # people: List[str]
     
     organizations: List[str]
     projects: List[str]
@@ -79,36 +77,16 @@ def parse_note(path: Path) -> ObsidianNote:
     metadata_section, notion_body = split_metadata_and_body(remainder)
 
     lines = metadata_section.splitlines()
-    # locations: List[str] = []
-    # people: List[str] = []
 
     organizations: List[str] = []
     projects: List[str] = []
     participants: List[str] = []
-
-    # collecting_people = False
 
     collecting_participants = False
 
     for line in lines:
         stripped = line.strip()
         lowered = stripped.lower()
-
-        # if stripped.lower().startswith("**location**::"):
-        #     locations = extract_bracket_links(stripped)
-        #     collecting_people = False
-        #     continue
-
-        # if stripped.lower().startswith("**person**::"):
-        #     people.extend(extract_bracket_links(stripped))
-        #     collecting_people = True
-        #     continue
-
-        # if collecting_people:
-        #     if not stripped or not stripped.startswith("-"):
-        #         collecting_people = False
-        #         continue
-        #     people.extend(extract_bracket_links(stripped))
 
         if lowered.startswith("**client**::"):
             organizations = extract_bracket_links(stripped)
@@ -137,9 +115,6 @@ def parse_note(path: Path) -> ObsidianNote:
         ,metadata_section=metadata_section
         ,body=notion_body
 
-        # ,locations=locations
-        # ,people=people
-        
         ,organizations=organizations
         ,projects=projects
         ,participants=participants
