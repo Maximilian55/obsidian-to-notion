@@ -30,6 +30,8 @@ When `PROJECTS_VAULT_PATH` is set, project wiki links are resolved by opening th
 
 ### Need to Know
 - .md files should be formatted like the `example_note.md` file include
+- we do not find a matching property in notion for the obsidian links a popup warning will show
+    - if this happens, manually add them to notion
 
 ### To Do
 - error message when notion api does not have access to dbs
@@ -51,6 +53,7 @@ When `PROJECTS_VAULT_PATH` is set, project wiki links are resolved by opening th
 - figure out how obsidian-shellcommands can pass more arguments 
 - learn obsidian-shellcommands better
     - it has variables that it can pass like {{yaml_content}} - may be easier than parsing the .md file
+- it is set up to use a lookup to get a "notion name" for the projects. some may rather not use a lookup and keep their obsidian vault "synced" up with notion, if this is the case, they might want some sort of user input in a config file to determine if we should use a lookup or not. 
 
 
 Pass `--debug-log` to capture full payload/response data in `export.debug.log` when troubleshooting.

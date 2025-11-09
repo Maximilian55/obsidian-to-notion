@@ -101,6 +101,14 @@ def run_cli(argv: Optional[list[str]] = None) -> None:
         missing_participants = ", ".join(result.missing_participants)
         print(f"[warn] Missing participants {missing_participants}")
         logger.warning("Missing participants for %s: %s", note.path, missing_participants)
+        for participant in result.missing_participants:
+            print(f"⚠ Missing participant for Notion lookup: {participant}")
+    if result.missing_organizations:
+        for org in result.missing_organizations:
+            print(f"⚠ Missing organization for Notion lookup: {org}")
+    if result.missing_projects:
+        for proj in result.missing_projects:
+            print(f"⚠ Missing project for Notion lookup: {proj}")
 
     if not args.send:
         print(json.dumps(result.payload, indent=2))

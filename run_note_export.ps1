@@ -78,7 +78,26 @@ try {
     # $argsToPass = @($resolvedNote) + ($ForwardedArgs | Where-Object { $_ -ne $null })
     $argsToPass = @($resolvedNote, "--debug-log") + ($ForwardedArgs | Where-Object { $_ -ne $null })
     Write-Host "Running exporter for $resolvedNote" -ForegroundColor Cyan
-    & $pythonExe $exporter @argsToPass
+
+    $output = & $pythonExe $exporter @argsToPass 2>&1
+    $output | ForEach-Object { Write-Host $_ }
+
+    $exitCode = $LASTEXITCODE
+    $warningLines = $output | Where-Object { $_ -match '^\u26A0' } # lines starting with ⚠
+
+    if ($warningLines) {
+        $message = ($warningLines -join "`n")
+        try {
+            Add-Type -AssemblyName PresentationFramework -ErrorAction Stop | Out-Null
+            [System.Windows.MessageBox]::Show($message, "Notion Export Warnings") | Out-Null
+        } catch {
+            Write-Warning "Missing relation warnings:`n$message"
+        }
+    }
+
+    if ($exitCode -ne 0) {
+        throw "export_note_to_notion.py exited with code $exitCode"
+    }
 }
 finally {
     Pop-Location
