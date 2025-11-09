@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import logging
 from pathlib import Path
 from typing import Optional
 
@@ -17,6 +18,11 @@ def build_arg_parser() -> argparse.ArgumentParser:
     parser.add_argument("--env", default=".env", help="Path to the .env file with Notion credentials.")
     parser.add_argument("--send", action="store_true", help="Actually create pages in Notion.")
     parser.add_argument("--skip-lookups", action="store_true", help="Skip relation lookups for dry runs.")
+    parser.add_argument(
+        "--debug-log",
+        action="store_true",
+        help="Write full payloads and Notion responses to export.debug.log",
+    )
     parser.add_argument("note_path", help="Markdown file to export.")
     return parser
 
@@ -55,31 +61,70 @@ def run_cli(argv: Optional[list[str]] = None) -> None:
     parser = build_arg_parser()
     args = parser.parse_args(argv)
 
+    logger = configure_logging()
+    debug_logger = configure_debug_logger() if args.debug_log else None
+
     env_config = load_env_file(Path(args.env))
     client = NotionClient(env_config.token) if (args.send or not args.skip_lookups) else None
 
     note_path = Path(args.note_path)
+    logger.info("Starting export for %s", note_path)
     note = parse_note(note_path)
     database = route_for_note(note_path, env_config)
     result = export_note(
-        note
-        ,env_config
-        ,database
-        ,client=client
-        ,skip_lookups=args.skip_lookups
-        ,send_to_notion=args.send
+        note,
+        env_config,
+        database,
+        client=client,
+        skip_lookups=args.skip_lookups,
+        send_to_notion=args.send,
+        debug_logger=debug_logger,
     )
 
     print(f"[info] Processed {note.path}")
+    logger.info("Processed %s", note.path)
 
     if result.missing_organizations:
-        print(f"[warn] Missing organizations: {', '.join(result.missing_organizations)}")
+        missing_orgs = ", ".join(result.missing_organizations)
+        print(f"[warn] Missing organizations: {missing_orgs}")
+        logger.warning("Missing organizations for %s: %s", note.path, missing_orgs)
     if result.missing_projects:
-        print(f"[warn] Missing projects: {', '.join(result.missing_projects)}")
+        missing_projects = ", ".join(result.missing_projects)
+        print(f"[warn] Missing projects: {missing_projects}")
+        logger.warning("Missing projects for %s: %s", note.path, missing_projects)
     if result.missing_participants:
-        print(f"[warn] Missing participants {', '.join(result.missing_participants)}")
+        missing_participants = ", ".join(result.missing_participants)
+        print(f"[warn] Missing participants {missing_participants}")
+        logger.warning("Missing participants for %s: %s", note.path, missing_participants)
 
     if not args.send:
         print(json.dumps(result.payload, indent=2))
+        logger.info("Dry-run complete for %s", note.path)
+        if debug_logger:
+            debug_logger.info("Payload for %s:\n%s", note.path, json.dumps(result.payload, indent=2))
     else:
         print(f"[info] Created Notion page: {result.notion_url}")
+        logger.info("Created Notion page for %s at %s", note.path, result.notion_url)
+LOG_PATH = Path(__file__).resolve().parent.parent / "export.log"
+DEBUG_LOG_PATH = Path(__file__).resolve().parent.parent / "export.debug.log"
+LOGGER_NAME = "obsidian_to_notion"
+
+
+def configure_logging() -> logging.Logger:
+    logger = logging.getLogger(LOGGER_NAME)
+    if not logger.handlers:
+        logger.setLevel(logging.INFO)
+        handler = logging.FileHandler(LOG_PATH, encoding="utf-8")
+        handler.setFormatter(logging.Formatter("%(asctime)s [%(levelname)s] %(message)s"))
+        logger.addHandler(handler)
+    return logger
+
+
+def configure_debug_logger() -> logging.Logger:
+    debug_logger = logging.getLogger(f"{LOGGER_NAME}.debug")
+    if not debug_logger.handlers:
+        debug_logger.setLevel(logging.INFO)
+        handler = logging.FileHandler(DEBUG_LOG_PATH, encoding="utf-8")
+        handler.setFormatter(logging.Formatter("%(asctime)s [DEBUG] %(message)s"))
+        debug_logger.addHandler(handler)
+    return debug_logger

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import logging
 from dataclasses import dataclass
 from datetime import datetime
 from typing import Dict, List, Optional, Sequence, Set, Tuple
@@ -121,13 +122,14 @@ class ExportResult:
 
 
 def export_note(
-    note: ObsidianNote
-    ,env_config: EnvConfig
-    ,database: DatabaseRoute
-    ,*
-    ,client: Optional[NotionClient] = None
-    ,skip_lookups: bool = False
-    ,send_to_notion: bool = False
+    note: ObsidianNote,
+    env_config: EnvConfig,
+    database: DatabaseRoute,
+    *,
+    client: Optional[NotionClient] = None,
+    skip_lookups: bool = False,
+    send_to_notion: bool = False,
+    debug_logger: Optional[logging.Logger] = None,
 ) -> ExportResult:
     if client is None and (send_to_notion or not skip_lookups):
         client = NotionClient(env_config.token)
@@ -185,7 +187,11 @@ def export_note(
 
     response: Optional[Dict] = None
     if send_to_notion and client is not None:
+        if debug_logger:
+            debug_logger.info("Sending payload for %s:\n%s", note.path, json.dumps(payload, indent=2))
         response = client.create_page(payload)
+        if debug_logger:
+            debug_logger.info("Response for %s:\n%s", note.path, json.dumps(response, indent=2))
 
     return ExportResult(
         note=note

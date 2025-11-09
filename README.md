@@ -23,6 +23,8 @@ Example:
 
 Use the "run_note_export.ps1" script to trouble shoot
 
+Each run also appends to `export.log` (repo root) with timestamps, missing relation notes, and Notion page URLs so you can audit what happened later.
+
 ### To Do
 - error message when notion api does not have access to dbs
 - way to parse md file and keep formatting (the ## header stuff)
@@ -30,6 +32,7 @@ Use the "run_note_export.ps1" script to trouble shoot
     - maybe we read the .md file, and try to break the formatted ## stuff into blocks, and apply the formatting to a json property
 - handle the "Long name" property for organizations
 - how to handle matching the names of related properties
+    - currently, is there is no match, that property is not added (no new page made)
     - do we want to create pages in the related dbs if they do not exist
     - do we add a property to the obsidian relations that has the db_id for the proper notion db?
         - example
@@ -38,8 +41,8 @@ Use the "run_note_export.ps1" script to trouble shoot
             3. then go to the 2025 - Client LF page and read some property called "notion_db_id"
             4. then use that "notion_db_id" to create the related property in the notion database
 - how to handle cases where i export a .md file, then update that .md file one week later
-- add log
+- figure out how obsidian-shellcommands can pass more arguments 
 
 
-
-
+Pass `--debug-log` to capture full payload/response data in `export.debug.log` when troubleshooting.
+- currently treated as hardcoded lines in run_note_export.ps1
