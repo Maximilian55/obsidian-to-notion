@@ -6,16 +6,16 @@
     Accepts a single argument (absolute markdown path) and invokes run_note_export.ps1
     with the same path plus the --send flag so callers do not have to manage CLI switches.
 #>
-[CmdletBinding(PositionalBinding = $true)]
+[CmdletBinding(PositionalBinding = $true)] # allow simple positional invocation for Templater/Shell Commands
 param(
     [Parameter(Mandatory = $true, Position = 0)]
     [string]$NotePath
 )
 
-Set-StrictMode -Version Latest
-$ErrorActionPreference = "Stop"
+Set-StrictMode -Version Latest  # catch mistakes early (e.g., undefined variables)
+$ErrorActionPreference = "Stop" # abort immediately on any failure
 
-$rootScript = Join-Path -Path (Split-Path -Parent $PSCommandPath) -ChildPath "run_note_export.ps1"
+$rootScript = Join-Path -Path (Split-Path -Parent $PSCommandPath) -ChildPath "run_note_export.ps1" # reuse the main helper
 
 if (-not (Test-Path $rootScript)) {
     throw "Cannot locate base exporter script at $rootScript"
@@ -26,4 +26,4 @@ if (-not [System.IO.Path]::IsPathRooted($NotePath)) {
 }
 
 $resolvedNote = (Resolve-Path $NotePath).Path
-& $rootScript $resolvedNote "--send"
+& $rootScript $resolvedNote "--send" # always include --send so Obsidian button creates the page
