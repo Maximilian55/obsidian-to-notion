@@ -25,6 +25,9 @@ Use the "run_note_export.ps1" script to trouble shoot
 
 Each run also appends to `export.log` (repo root) with timestamps, missing relation notes, and Notion page URLs so you can audit what happened later.
 
+### Need to Know
+- .md files should be formatted like the `example_note.md` file include
+
 ### To Do
 - error message when notion api does not have access to dbs
 - way to parse md file and keep formatting (the ## header stuff)
@@ -42,6 +45,8 @@ Each run also appends to `export.log` (repo root) with timestamps, missing relat
             4. then use that "notion_db_id" to create the related property in the notion database
 - how to handle cases where i export a .md file, then update that .md file one week later
 - figure out how obsidian-shellcommands can pass more arguments 
+- learn obsidian-shellcommands better
+    - it has variables that it can pass like {{yaml_content}} - may be easier than parsing the .md file
 
 
 Pass `--debug-log` to capture full payload/response data in `export.debug.log` when troubleshooting.

@@ -12,7 +12,9 @@ venv/
 .vscode/
 
 # sample data
-test_note.md
+*.md
+!example_note.md
+!README.md
 
 # log
 *.log
