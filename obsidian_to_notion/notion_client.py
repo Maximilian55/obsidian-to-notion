@@ -17,17 +17,17 @@ class NotionClient:
         self.session = requests.Session()
         self.session.headers.update(
             {
-                "Authorization": f"Bearer {token}",
-                "Notion-Version": NOTION_VERSION,
-                "Content-Type": "application/json",
+                "Authorization": f"Bearer {token}"
+                ,"Notion-Version": NOTION_VERSION
+                ,"Content-Type": "application/json"
             }
         )
 
     def query_database_by_title(self, database_id: str, title: str, property_name: str = "Name") -> List[str]:
         url = f"https://api.notion.com/v1/databases/{database_id}/query"
         payload = {
-            "filter": {"property": property_name, "title": {"equals": title}},
-            "page_size": 5,
+            "filter": {"property": property_name, "title": {"equals": title}}
+            ,"page_size": 5
         }
         response = self.session.post(url, data=json.dumps(payload))
         try:

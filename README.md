@@ -2,10 +2,10 @@
 
 ### Key pieces
 
-- `obsidian_to_notion/parser.py` – front-matter parser + wiki-link extraction.
-- `obsidian_to_notion/notion_client.py` – lightweight wrapper around the Notion REST API.
-- `obsidian_to_notion/exporter.py` – turns parsed notes into Notion payloads and sends them.
-- `obsidian_to_notion/cli.py` – command-line interface for exporting a single note (path supplied explicitly).
+- `obsidian_to_notion/parser.py` - pulls metadata/body out of the markdown file.
+- `obsidian_to_notion/notion_client.py` - tiny wrapper around the Notion REST API.
+- `obsidian_to_notion/exporter.py` - builds the Notion payload (with body chunking) and sends it.
+- `obsidian_to_notion/cli.py` - command-line entry point that wires everything together.
 
 ### Usage
 
@@ -24,4 +24,9 @@ Use the "run_export.ps1" script to trouble shoot
 
 ### To Do
 - figure out how to make pass a input like --send from the shell command plug in (then remove the duplicate PS script)
-- learn how to code so this thing is not 100% vibe codefs
+- learn how to code so this thing is not 100% vibe code
+- error message when notion api does not have access to dbs
+- way to parse md file and keep headers (the ## header stuff)
+- decide on if we want to create pages in the related dbs if they do not exist
+- handle for "Long name" property for organizations
+- handle regular notes

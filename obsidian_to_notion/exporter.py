@@ -25,11 +25,11 @@ def normalize_notion_date(raw_value: str) -> str:
 
 
 def resolve_relations(
-    client: NotionClient,
-    database_id: str,
-    names: Sequence[str],
-    *,
-    title_property: str = "Name",
+    client: NotionClient
+    ,database_id: str
+    ,names: Sequence[str]
+    ,*
+    ,title_property: str = "Name"
 ) -> Tuple[List[Dict[str, str]], List[str]]:
     relations: List[Dict[str, str]] = []
     missing: List[str] = []
@@ -44,12 +44,17 @@ def resolve_relations(
 
 
 def build_page_payload(
-    note: ObsidianNote,
-    database: DatabaseRoute,
-    location_relations: List[Dict[str, str]],
-    person_relations: List[Dict[str, str]],
-    *,
-    available_properties: Optional[Set[str]] = None,
+    note: ObsidianNote
+    ,database: DatabaseRoute
+    # ,location_relations: List[Dict[str, str]]
+    # ,person_relations: List[Dict[str, str]]
+
+    ,organizations_relations: List[Dict[str, str]]
+    ,projects_relations: List[Dict[str, str]]
+    ,participants_relations: List[Dict[str, str]]
+
+    ,*
+    ,available_properties: Optional[Set[str]] = None
 ) -> Dict:
     properties: Dict[str, Dict] = {
         database.properties.name: {"title": [{"type": "text", "text": {"content": note.source_name}}]},
@@ -63,15 +68,34 @@ def build_page_payload(
     if note.date_property and supports(database.properties.date):
         properties[database.properties.date] = {"date": {"start": normalize_notion_date(note.date_property)}}
 
-    if location_relations and supports(database.properties.location):
-        properties[database.properties.location] = {"relation": location_relations}
-    elif location_relations:
-        print("[warn] Skipping location relation; property not in database schema.")
+    # if location_relations and supports(database.properties.location):
+    #     properties[database.properties.location] = {"relation": location_relations}
+    # elif location_relations:
+    #     print("[warn] Skipping location relation; property not in database schema.")
 
-    if person_relations and supports(database.properties.person):
-        properties[database.properties.person] = {"relation": person_relations}
-    elif person_relations:
-        print("[warn] Skipping person relation; property not in database schema.")
+    # if person_relations and supports(database.properties.person):
+    #     properties[database.properties.person] = {"relation": person_relations}
+    # elif person_relations:
+    #     print("[warn] Skipping person relation; property not in database schema.")
+
+    # Organizations
+    if organizations_relations and supports(database.properties.organizations):
+        properties[database.properties.organizations] = {"relation": organizations_relations}
+    elif organizations_relations:
+        print("[warn] Skipping organizations relation: property not in database schema.")
+    
+    # Projects
+    if projects_relations and supports(database.properties.projects):
+        properties[database.properties.projects] = {"relation": projects_relations}
+    elif projects_relations:
+        print("[warn] Skipping projects relation: property noy in database schema.")
+
+    # Participants
+    if participants_relations and supports(database.properties.participants):
+        properties[database.properties.participants] = {"relation": participants_relations}
+    elif participants_relations:
+        print("[warn] Skipping participants relation: property not in database schema.")
+
 
     CHUNK_SIZE = 1900
 
@@ -101,20 +125,25 @@ def build_page_payload(
 class ExportResult:
     note: ObsidianNote
     payload: Dict
-    missing_locations: List[str]
-    missing_people: List[str]
+    # missing_locations: List[str]
+    # missing_people: List[str]
+
+    missing_organizations: List[str]
+    missing_projects: List[str]
+    missing_participants: List[str]
+
     sent: bool = False
     notion_url: Optional[str] = None
 
 
 def export_note(
-    note: ObsidianNote,
-    env_config: EnvConfig,
-    database: DatabaseRoute,
-    *,
-    client: Optional[NotionClient] = None,
-    skip_lookups: bool = False,
-    send_to_notion: bool = False,
+    note: ObsidianNote
+    ,env_config: EnvConfig
+    ,database: DatabaseRoute
+    ,*
+    ,client: Optional[NotionClient] = None
+    ,skip_lookups: bool = False
+    ,send_to_notion: bool = False
 ) -> ExportResult:
     if client is None and (send_to_notion or not skip_lookups):
         client = NotionClient(env_config.token)
@@ -123,23 +152,52 @@ def export_note(
         client = None
 
     if skip_lookups or client is None:
-        location_relations: List[Dict[str, str]] = []
-        person_relations: List[Dict[str, str]] = []
-        missing_locations = note.locations
-        missing_people = note.people
+        # location_relations: List[Dict[str, str]] = []
+        # person_relations: List[Dict[str, str]] = []
+
+        organizations_relations: List[Dict[str, str]] = []
+        projects_relations: List[Dict[str, str]] = []
+        participants_relations: List[Dict[str, str]] = []
+
+        # missing_locations = note.locations
+        # missing_people = note.people
+
+        missing_organizations = note.organizations
+        missing_projects = note.projects
+        missing_participants = note.participants
+
     else:
-        location_db = database.location_db_id or env_config.default_location_db_id
-        person_db = database.person_db_id or env_config.default_person_db_id
+        # location_db = database.location_db_id or env_config.default_location_db_id
+        # person_db = database.person_db_id or env_config.default_person_db_id
 
-        if location_db:
-            location_relations, missing_locations = resolve_relations(client, location_db, note.locations)
-        else:
-            location_relations, missing_locations = [], note.locations
+        organizations_db = database.organizations_db_id or env_config.default_organizations_db_id
+        projects_db = database.projects_db_id or env_config.default_projects_db_id
+        participants_db = database.participants_db_id or env_config.default_participants_db_id
 
-        if person_db:
-            person_relations, missing_people = resolve_relations(client, person_db, note.people)
+        # if location_db:
+        #     location_relations, missing_locations = resolve_relations(client, location_db, note.locations)
+        # else:
+        #     location_relations, missing_locations = [], note.locations
+
+        # if person_db:
+        #     person_relations, missing_people = resolve_relations(client, person_db, note.people)
+        # else:
+        #     person_relations, missing_people = [], note.people
+
+        if organizations_db:
+            organizations_relations, missing_organizations = resolve_relations(client, organizations_db, note.organizations)
         else:
-            person_relations, missing_people = [], note.people
+            organizations_relations, missing_organizations = [], note.organizations
+
+        if projects_db:
+            projects_relations, missing_projects = resolve_relations(client, projects_db, note.projects)
+        else:
+            projects_relations, missing_projects = [], note.projects
+
+        if participants_db:
+            participants_relations, missing_participants = resolve_relations(client, participants_db, note.participants)
+        else:
+            participants_relations, missing_participants = [], note.participants
 
     if not skip_lookups and client is not None:
         try:
@@ -150,11 +208,16 @@ def export_note(
         available_properties = None
 
     payload = build_page_payload(
-        note,
-        database,
-        location_relations,
-        person_relations,
-        available_properties=available_properties,
+        note
+        ,database
+        # ,location_relations
+        # ,person_relations
+        
+        ,organizations_relations
+        ,projects_relations
+        ,participants_relations
+        
+        ,available_properties=available_properties
     )
 
     response: Optional[Dict] = None
@@ -162,10 +225,15 @@ def export_note(
         response = client.create_page(payload)
 
     return ExportResult(
-        note=note,
-        payload=payload,
-        missing_locations=missing_locations,
-        missing_people=missing_people,
-        sent=send_to_notion and response is not None,
-        notion_url=(response or {}).get("url") if response else None,
+        note=note
+        ,payload=payload
+        # ,missing_locations=missing_locations
+        # ,missing_people=missing_people
+        
+        ,missing_organizations=missing_organizations
+        ,missing_projects=missing_projects
+        ,missing_participants=missing_participants
+        
+        ,sent=send_to_notion and response is not None
+        ,notion_url=(response or {}).get("url") if response else None
     )
