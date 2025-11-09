@@ -41,6 +41,10 @@ class DatabaseRoute:
     participants_db_id: Optional[str] = None
     properties: PropertyMapping = field(default_factory=PropertyMapping)
 
+    @property
+    def resolved_db_id(self) -> str:
+        return self.target_db_id
+
 
 
 def load_env_file(path: Path) -> EnvConfig:
