@@ -29,9 +29,9 @@ class PropertyMapping:
 
     name: str = "Name"
     date: Optional[str] = "Date"
-    organizations: Optional[str] = "Organizations"
+    organizations: Optional[str] = "Organization"
     projects: Optional[str] = "Projects"
-    participants: Optional[str] = "People"
+    participants: Optional[str] = "Participants"
 
 
 @dataclass

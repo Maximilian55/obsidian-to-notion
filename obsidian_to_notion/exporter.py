@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import logging
+import re
 from collections import defaultdict
 from dataclasses import dataclass
 from datetime import datetime
@@ -48,6 +49,12 @@ def resolve_relations(
         else:
             missing.append(name)
     return relations, missing
+
+
+def strip_leading_date(name: str) -> str:
+    """Remove leading YYYY-MM-DD + space from names, returning original if unmatched."""
+
+    return re.sub(r"^\d{4}-\d{2}-\d{2}\s+", "", name)
 
 
 def _project_override_path(project_name: str, vault_path: Path) -> Path:
@@ -121,7 +128,11 @@ def build_page_payload(
 ) -> Dict:
     """Assemble the JSON body for creating a Notion page based on the parsed note."""
 
-    properties: Dict[str, Dict] = {database.properties.name: {"title": [{"type": "text", "text": {"content": note.source_name}}]}}
+    properties: Dict[str, Dict] = {
+        database.properties.name: {
+            "title": [{"type": "text", "text": {"content": strip_leading_date(note.source_name)}}]
+        }
+    }
 
     def supports(prop_name: Optional[str]) -> bool:
         if not prop_name:

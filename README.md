@@ -35,6 +35,8 @@ Each run also appends to `export.log` (repo root) with timestamps, missing relat
 
 When `PROJECTS_VAULT_PATH` is set, project wiki links are resolved by opening the matching `.md` file, reading its front-matter `Notion name`, and using that value for Notion lookups. If the file or property is missing, the exporter falls back to the literal `[[Project]]` text.
 
+Note titles are automatically stripped of a leading `YYYY-MM-DD ` prefix before being sent to Notion, so `2025-11-03 Standup` becomes `Standup` in the destination page title.
+
 ### Need to Know
 - .md files should be formatted like the `example_note.md` file include
 - we do not find a matching property in notion for the obsidian links a popup warning will show
@@ -45,7 +47,6 @@ When `PROJECTS_VAULT_PATH` is set, project wiki links are resolved by opening th
 - way to parse md file and keep formatting (the ## header stuff)
     - I think - each notion page contians "blocks" each block contains text.
     - maybe we read the .md file, and try to break the formatted ## stuff into blocks, and apply the formatting to a json property
-- handle the "Long name" property for organizations
 - how to handle matching the names of related properties
     - currently, is there is no match, that property is not added (no new page made)
     - do we want to create pages in the related dbs if they do not exist
@@ -61,6 +62,8 @@ When `PROJECTS_VAULT_PATH` is set, project wiki links are resolved by opening th
 - learn obsidian-shellcommands better
     - it has variables that it can pass like {{yaml_content}} - may be easier than parsing the .md file
 - it is set up to use a lookup to get a "notion name" for the projects. some may rather not use a lookup and keep their obsidian vault "synced" up with notion, if this is the case, they might want some sort of user input in a config file to determine if we should use a lookup or not. 
+- error when target propreties are not found in target db
+    - I had a test meeting notes db with a property "People", when i sent a note to the actual meeting db, it had the property called "Participants"
 
 
 Pass `--debug-log` to capture full payload/response data in `export.debug.log` when troubleshooting.
